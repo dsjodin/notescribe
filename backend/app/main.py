@@ -312,4 +312,17 @@ async def get_audio(meeting_id: int):
 # Serve frontend static files in production
 static_dir = "/app/static"
 if os.path.exists(static_dir):
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    from fastapi.responses import HTMLResponse
+
+    _static_files = StaticFiles(directory=static_dir)
+    _index_html = os.path.join(static_dir, "index.html")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(request: Request, full_path: str):
+        # Try to serve the static file first (JS, CSS, images, etc.)
+        file_path = os.path.join(static_dir, full_path)
+        if full_path and os.path.isfile(file_path):
+            return await _static_files.get_response(full_path, request.scope)
+        # For all other paths, serve index.html so React Router handles routing
+        with open(_index_html) as f:
+            return HTMLResponse(f.read())
