@@ -140,6 +140,18 @@ export default function ViewerPage() {
     }
   }
 
+  // Global spacebar → toggle play/pause
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.code === "Space" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        togglePlay();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
   function toggleSpeakerFilter(speaker: string) {
     setSpeakerFilter((prev) => (prev === speaker ? null : speaker));
   }
