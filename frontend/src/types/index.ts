@@ -9,6 +9,7 @@ export interface Meeting {
   title: string;
   transcript: string;
   audio_filename: string;
+  summary: string;
   created_at: string;
 }
 

@@ -80,13 +80,31 @@ async def get_meeting(meeting_id: int):
     db = await get_db()
     try:
         cursor = await db.execute(
-            "SELECT id, title, transcript, audio_filename, created_at FROM meetings WHERE id = ?",
+            "SELECT id, title, transcript, audio_filename, summary, created_at FROM meetings WHERE id = ?",
             (meeting_id,),
         )
         row = await cursor.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Meeting not found")
         return dict(row)
+    finally:
+        await db.close()
+
+
+@app.put("/api/meetings/{meeting_id}/summary", dependencies=[Depends(verify_token)])
+async def update_summary(meeting_id: int, summary: str = Form()):
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT id FROM meetings WHERE id = ?", (meeting_id,)
+        )
+        if not await cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Meeting not found")
+        await db.execute(
+            "UPDATE meetings SET summary = ? WHERE id = ?", (summary, meeting_id)
+        )
+        await db.commit()
+        return {"ok": True}
     finally:
         await db.close()
 

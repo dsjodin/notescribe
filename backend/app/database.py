@@ -19,9 +19,15 @@ async def init_db():
                 title TEXT NOT NULL,
                 transcript TEXT NOT NULL,
                 audio_filename TEXT NOT NULL,
+                summary TEXT NOT NULL DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # Add summary column to existing databases
+        try:
+            await db.execute("ALTER TABLE meetings ADD COLUMN summary TEXT NOT NULL DEFAULT ''")
+        except Exception:
+            pass  # Column already exists
         await db.commit()
     finally:
         await db.close()

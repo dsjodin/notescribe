@@ -78,6 +78,17 @@ export async function deleteMeeting(id: number) {
   return res.json();
 }
 
+export async function updateSummary(id: number, summary: string) {
+  const form = new FormData();
+  form.append("summary", summary);
+  const res = await authFetch(`${API_BASE}/meetings/${id}/summary`, {
+    method: "PUT",
+    body: form,
+  });
+  if (!res.ok) throw new Error("Failed to update summary");
+  return res.json();
+}
+
 export function getAudioUrl(id: number): string {
   return `${API_BASE}/meetings/${id}/audio`;
 }

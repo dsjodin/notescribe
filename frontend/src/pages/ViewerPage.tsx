@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getMeeting, getAudioUrl, getToken } from "../api";
+import { getMeeting, getAudioUrl, getToken, updateSummary } from "../api";
 import { parseTranscript } from "../transcript";
 import { Meeting, TranscriptLine } from "../types";
 
@@ -12,6 +12,9 @@ export default function ViewerPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioSrc, setAudioSrc] = useState<string | null>(null);
   const [speakerFilter, setSpeakerFilter] = useState<string | null>(null);
+  const [summaryText, setSummaryText] = useState("");
+  const [isEditingSummary, setIsEditingSummary] = useState(false);
+  const [savingSummary, setSavingSummary] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -50,6 +53,7 @@ export default function ViewerPage() {
     getMeeting(parseInt(id)).then((m: Meeting) => {
       setMeeting(m);
       setLines(parseTranscript(m.transcript));
+      setSummaryText(m.summary || "");
     });
   }, [id]);
 
@@ -152,6 +156,19 @@ export default function ViewerPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   });
 
+  async function saveSummary() {
+    if (!meeting) return;
+    setSavingSummary(true);
+    try {
+      await updateSummary(meeting.id, summaryText);
+      setIsEditingSummary(false);
+    } catch {
+      // stay in edit mode on error
+    } finally {
+      setSavingSummary(false);
+    }
+  }
+
   function toggleSpeakerFilter(speaker: string) {
     setSpeakerFilter((prev) => (prev === speaker ? null : speaker));
   }
@@ -173,6 +190,54 @@ export default function ViewerPage() {
           <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
             {new Date(meeting.created_at).toLocaleDateString()}
           </span>
+        </div>
+
+        <div className="summary-section">
+          <div className="summary-header">
+            <h2>Sammanfattning</h2>
+            {!isEditingSummary && (
+              <button
+                className="btn btn-small"
+                onClick={() => setIsEditingSummary(true)}
+              >
+                {summaryText ? "Redigera" : "Lägg till"}
+              </button>
+            )}
+          </div>
+          {isEditingSummary ? (
+            <div className="summary-edit">
+              <textarea
+                className="summary-textarea"
+                value={summaryText}
+                onChange={(e) => setSummaryText(e.target.value)}
+                placeholder="Skriv en kort sammanfattning av mötet..."
+                rows={4}
+                autoFocus
+              />
+              <div className="summary-actions">
+                <button
+                  className="btn btn-primary btn-small"
+                  onClick={saveSummary}
+                  disabled={savingSummary}
+                >
+                  {savingSummary ? "Sparar..." : "Spara"}
+                </button>
+                <button
+                  className="btn btn-small"
+                  onClick={() => {
+                    setSummaryText(meeting?.summary || "");
+                    setIsEditingSummary(false);
+                  }}
+                >
+                  Avbryt
+                </button>
+              </div>
+            </div>
+          ) : summaryText ? (
+            <p className="summary-text">{summaryText}</p>
+          ) : (
+            <p className="summary-empty">Ingen sammanfattning ännu.</p>
+          )}
         </div>
 
         {speakers.length > 1 && (
