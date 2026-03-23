@@ -107,13 +107,25 @@ export default function ViewerPage() {
     }
   }, [lines, activeLine, speakerFilter, visibleIndices]);
 
-  function playFromLine(index: number) {
+  function toggleLinePlayback(index: number) {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.currentTime = lines[index].seconds;
-    audio.play();
-    setIsPlaying(true);
-    setActiveLine(index);
+
+    if (index === activeLine && isPlaying) {
+      // Clicking the active playing line → pause
+      audio.pause();
+      setIsPlaying(false);
+    } else if (index === activeLine && !isPlaying) {
+      // Clicking the active paused line → resume
+      audio.play();
+      setIsPlaying(true);
+    } else {
+      // Different line → seek and play
+      audio.currentTime = lines[index].seconds;
+      audio.play();
+      setIsPlaying(true);
+      setActiveLine(index);
+    }
   }
 
   function togglePlay() {
@@ -182,17 +194,17 @@ export default function ViewerPage() {
                 key={i}
                 ref={(el) => { lineRefs.current[i] = el; }}
                 className={`transcript-line ${i === activeLine ? "active" : ""}`}
-                onClick={() => playFromLine(i)}
+                onClick={() => toggleLinePlayback(i)}
               >
                 <button
                   className="btn-icon"
                   onClick={(e) => {
                     e.stopPropagation();
-                    playFromLine(i);
+                    toggleLinePlayback(i);
                   }}
-                  title={`Play from ${line.timestamp}`}
+                  title={isPlaying && i === activeLine ? "Pause" : `Play from ${line.timestamp}`}
                 >
-                  &#9654;
+                  {isPlaying && i === activeLine ? "\u23F8" : "\u25B6"}
                 </button>
                 <span className="transcript-timestamp">{line.timestamp}</span>
                 <span className={`transcript-speaker ${getSpeakerClass(line.speaker)}`}>
