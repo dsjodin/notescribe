@@ -1,0 +1,373 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface-hover: #242836;
+  --border: #2a2e3a;
+  --text: #e4e4e7;
+  --text-muted: #8b8d98;
+  --primary: #6c63ff;
+  --primary-hover: #5a52d9;
+  --danger: #ef4444;
+  --speaker-colors: #60a5fa, #f472b6, #34d399, #fbbf24, #a78bfa, #fb923c;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Nav bar */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.navbar-links a,
+.navbar-links button {
+  color: var(--text-muted);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.navbar-links a:hover,
+.navbar-links button:hover {
+  color: var(--text);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.btn-icon:hover {
+  background: var(--primary-hover);
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group textarea {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.form-group textarea {
+  min-height: 200px;
+  resize: vertical;
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.file-input-wrapper {
+  position: relative;
+}
+
+.file-input-wrapper input[type="file"] {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.file-input-wrapper input[type="file"]::file-selector-button {
+  background: var(--surface-hover);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  margin-right: 0.75rem;
+  cursor: pointer;
+}
+
+/* Meeting list */
+.meeting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meeting-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s;
+}
+
+.meeting-card:hover {
+  border-color: var(--primary);
+}
+
+.meeting-card-info h3 {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.meeting-card-info span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.meeting-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Login page */
+.login-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 380px;
+}
+
+.login-box h1 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.login-box p {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.error-msg {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+/* Transcript viewer */
+.viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.viewer-header h1 {
+  margin-bottom: 0;
+}
+
+.transcript-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.transcript-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.transcript-line:hover {
+  background: var(--surface-hover);
+}
+
+.transcript-line.active {
+  background: var(--surface);
+  border-left: 3px solid var(--primary);
+}
+
+.transcript-timestamp {
+  font-family: "SF Mono", "Fira Code", monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-width: 50px;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.transcript-speaker {
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-width: 100px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.transcript-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* Speaker colors */
+.speaker-0 { color: #60a5fa; }
+.speaker-1 { color: #f472b6; }
+.speaker-2 { color: #34d399; }
+.speaker-3 { color: #fbbf24; }
+.speaker-4 { color: #a78bfa; }
+.speaker-5 { color: #fb923c; }
+
+/* Audio player bar */
+.audio-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+}
+
+.audio-bar audio {
+  flex: 1;
+  height: 36px;
+}
+
+/* Spacer so content isn't hidden behind audio bar */
+.audio-spacer {
+  height: 80px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+
+.empty-state p {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}

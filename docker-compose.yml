@@ -1,0 +1,13 @@
+services:
+  notescribe:
+    build: .
+    ports:
+      - "8080:8000"
+    volumes:
+      - notescribe-data:/data
+    environment:
+      - NOTESCRIBE_APP_PASSWORD=changeme
+    restart: unless-stopped
+
+volumes:
+  notescribe-data:
