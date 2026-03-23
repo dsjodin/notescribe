@@ -13,8 +13,8 @@ export default function LoginPage() {
     try {
       await login(password);
       navigate("/");
-    } catch {
-      setError("Wrong password");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Wrong password");
     }
   }
 

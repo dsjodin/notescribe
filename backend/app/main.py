@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="NoteScribe", lifespan=lifespan)
+app = FastAPI(title="NoteScribe", lifespan=lifespan, docs_url=None, redoc_url=None)
 
 AUDIO_MIME_TYPES = {
     ".wav": "audio/wav",

@@ -47,7 +47,10 @@ export async function login(password: string): Promise<string> {
     method: "POST",
     body: form,
   });
-  if (!res.ok) throw new Error("Wrong password");
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.detail || "Wrong password");
+  }
   const data = await res.json();
   setToken(data.token);
   return data.token;
