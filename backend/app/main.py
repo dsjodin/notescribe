@@ -21,6 +21,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="NoteScribe", lifespan=lifespan)
 
+AUDIO_MIME_TYPES = {
+    ".wav": "audio/wav",
+    ".mp3": "audio/mpeg",
+    ".ogg": "audio/ogg",
+    ".m4a": "audio/mp4",
+    ".webm": "audio/webm",
+    ".aac": "audio/aac",
+    ".flac": "audio/flac",
+    ".opus": "audio/opus",
+}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -86,9 +97,8 @@ async def create_meeting(
     transcript: str = Form(),
     audio: UploadFile = File(),
 ):
-    if not audio.filename or not audio.filename.lower().endswith(
-        (".wav", ".mp3", ".ogg", ".m4a", ".webm")
-    ):
+    ext = os.path.splitext(audio.filename or "")[1].lower()
+    if ext not in AUDIO_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported audio format")
 
     db = await get_db()
@@ -101,7 +111,6 @@ async def create_meeting(
         meeting_id = cursor.lastrowid
 
         # Save audio file with meeting ID prefix to avoid name conflicts
-        ext = os.path.splitext(audio.filename)[1]
         audio_path = os.path.join(settings.data_dir, "audio", f"{meeting_id}{ext}")
         content = await audio.read()
         with open(audio_path, "wb") as f:
@@ -157,7 +166,9 @@ async def get_audio(meeting_id: int):
         if not os.path.exists(audio_path):
             raise HTTPException(status_code=404, detail="Audio file not found")
 
-        return FileResponse(audio_path, media_type="audio/wav")
+        ext = os.path.splitext(row["audio_filename"])[1].lower()
+        mime = AUDIO_MIME_TYPES.get(ext, "application/octet-stream")
+        return FileResponse(audio_path, media_type=mime)
     finally:
         await db.close()
 

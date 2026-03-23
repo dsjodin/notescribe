@@ -63,7 +63,7 @@ export default function UploadPage() {
             <div className="file-input-wrapper">
               <input
                 type="file"
-                accept="audio/*"
+                accept=".wav,.mp3,.ogg,.m4a,.webm,.aac,.flac,.opus"
                 onChange={(e) => setAudio(e.target.files?.[0] || null)}
               />
             </div>
