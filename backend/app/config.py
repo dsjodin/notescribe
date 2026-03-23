@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     data_dir: str = "/data"
     db_path: str = "/data/notescribe.db"
     max_upload_size_mb: int = 500
+    session_ttl_hours: int = 24
+    cors_origins: str = ""
 
     model_config = {"env_prefix": "NOTESCRIBE_"}
 

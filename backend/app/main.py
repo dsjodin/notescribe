@@ -1,21 +1,45 @@
 import os
 import secrets
+import time
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Header
-from fastapi.responses import FileResponse
+import bcrypt
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Header, Request
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
 from app.database import init_db, get_db
 
 
+# --- Password hash (computed once at startup) ---
+_password_hash: bytes = b""
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global _password_hash
     os.makedirs(settings.data_dir, exist_ok=True)
     os.makedirs(os.path.join(settings.data_dir, "audio"), exist_ok=True)
     await init_db()
+
+    # Hash the configured password at startup
+    _password_hash = bcrypt.hashpw(settings.app_password.encode(), bcrypt.gensalt())
+
+    # Clean up expired sessions
+    db = await get_db()
+    try:
+        await db.execute(
+            "DELETE FROM sessions WHERE expires_at < ?",
+            (datetime.now(timezone.utc).isoformat(),),
+        )
+        await db.commit()
+    finally:
+        await db.close()
+
     yield
 
 
@@ -32,31 +56,125 @@ AUDIO_MIME_TYPES = {
     ".opus": "audio/opus",
 }
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+# --- CORS (restricted) ---
+if settings.cors_origins:
+    origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+# --- Security headers middleware ---
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+
+# --- Rate limiting (login) ---
+_login_attempts: dict[str, tuple[int, float]] = {}
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_WINDOW_SECONDS = 15 * 60  # 15 minutes
+
+
+def _check_rate_limit(client_ip: str):
+    now = time.time()
+    if client_ip in _login_attempts:
+        count, window_start = _login_attempts[client_ip]
+        if now - window_start > LOGIN_WINDOW_SECONDS:
+            # Window expired, reset
+            del _login_attempts[client_ip]
+        elif count >= MAX_LOGIN_ATTEMPTS:
+            raise HTTPException(
+                status_code=429,
+                detail="Too many login attempts. Try again later.",
+            )
+
+
+def _record_failed_attempt(client_ip: str):
+    now = time.time()
+    if client_ip in _login_attempts:
+        count, window_start = _login_attempts[client_ip]
+        if now - window_start > LOGIN_WINDOW_SECONDS:
+            _login_attempts[client_ip] = (1, now)
+        else:
+            _login_attempts[client_ip] = (count + 1, window_start)
+    else:
+        _login_attempts[client_ip] = (1, now)
+
+
+def _clear_attempts(client_ip: str):
+    _login_attempts.pop(client_ip, None)
+
 
 # --- Auth ---
 
-_tokens: set[str] = set()
-
-
-def verify_token(authorization: str = Header()):
+async def verify_token(authorization: str = Header()):
     token = authorization.removeprefix("Bearer ")
-    if token not in _tokens:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT token FROM sessions WHERE token = ? AND expires_at > ?",
+            (token, datetime.now(timezone.utc).isoformat()),
+        )
+        row = await cursor.fetchone()
+        if not row:
+            # Clean up expired token if it exists
+            await db.execute("DELETE FROM sessions WHERE token = ?", (token,))
+            await db.commit()
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+    finally:
+        await db.close()
 
 
 @app.post("/api/auth/login")
-async def login(password: str = Form()):
-    if password != settings.app_password:
+async def login(request: Request, password: str = Form()):
+    client_ip = request.client.host if request.client else "unknown"
+    _check_rate_limit(client_ip)
+
+    if not bcrypt.checkpw(password.encode(), _password_hash):
+        _record_failed_attempt(client_ip)
         raise HTTPException(status_code=401, detail="Wrong password")
+
+    _clear_attempts(client_ip)
+
     token = secrets.token_urlsafe(32)
-    _tokens.add(token)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=settings.session_ttl_hours)
+
+    db = await get_db()
+    try:
+        await db.execute(
+            "INSERT INTO sessions (token, expires_at) VALUES (?, ?)",
+            (token, expires_at.isoformat()),
+        )
+        await db.commit()
+    finally:
+        await db.close()
+
     return {"token": token}
+
+
+@app.delete("/api/auth/logout", dependencies=[Depends(verify_token)])
+async def logout(authorization: str = Header()):
+    token = authorization.removeprefix("Bearer ")
+    db = await get_db()
+    try:
+        await db.execute("DELETE FROM sessions WHERE token = ?", (token,))
+        await db.commit()
+    finally:
+        await db.close()
+    return {"ok": True}
 
 
 # --- Meetings ---

@@ -12,6 +12,15 @@ export function clearToken() {
   localStorage.removeItem("notescribe_token");
 }
 
+export async function logout() {
+  try {
+    await authFetch(`${API_BASE}/auth/logout`, { method: "DELETE" });
+  } catch {
+    // Ignore errors — clear token regardless
+  }
+  clearToken();
+}
+
 export function isLoggedIn(): boolean {
   return !!getToken();
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getMeetings, deleteMeeting, clearToken } from "../api";
+import { getMeetings, deleteMeeting, logout } from "../api";
 import { MeetingSummary } from "../types";
 
 export default function MeetingsPage() {
@@ -18,8 +18,8 @@ export default function MeetingsPage() {
     setMeetings((prev) => prev.filter((m) => m.id !== id));
   }
 
-  function handleLogout() {
-    clearToken();
+  async function handleLogout() {
+    await logout();
     window.location.reload();
   }
 
