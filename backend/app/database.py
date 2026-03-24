@@ -35,6 +35,17 @@ async def init_db():
                 expires_at TIMESTAMP NOT NULL
             )
         """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS transcript_edits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meeting_id INTEGER NOT NULL,
+                line_index INTEGER NOT NULL,
+                original_text TEXT NOT NULL,
+                edited_text TEXT NOT NULL,
+                edited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(meeting_id, line_index)
+            )
+        """)
         await db.commit()
     finally:
         await db.close()

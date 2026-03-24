@@ -101,6 +101,36 @@ export async function updateSummary(id: number, summary: string) {
   return res.json();
 }
 
+export async function getTranscriptEdits(meetingId: number) {
+  const res = await authFetch(`${API_BASE}/meetings/${meetingId}/transcript-edits`);
+  return res.json();
+}
+
+export async function saveTranscriptEdit(
+  meetingId: number,
+  lineIndex: number,
+  originalText: string,
+  editedText: string,
+) {
+  const form = new FormData();
+  form.append("original_text", originalText);
+  form.append("edited_text", editedText);
+  const res = await authFetch(
+    `${API_BASE}/meetings/${meetingId}/transcript-edits/${lineIndex}`,
+    { method: "PUT", body: form },
+  );
+  if (!res.ok) throw new Error("Failed to save transcript edit");
+  return res.json();
+}
+
+export async function deleteTranscriptEdit(meetingId: number, lineIndex: number) {
+  const res = await authFetch(
+    `${API_BASE}/meetings/${meetingId}/transcript-edits/${lineIndex}`,
+    { method: "DELETE" },
+  );
+  return res.json();
+}
+
 export function getAudioUrl(id: number): string {
   return `${API_BASE}/meetings/${id}/audio`;
 }

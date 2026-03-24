@@ -280,7 +280,62 @@ async def delete_meeting(meeting_id: int):
         if os.path.exists(audio_path):
             os.remove(audio_path)
 
+        await db.execute("DELETE FROM transcript_edits WHERE meeting_id = ?", (meeting_id,))
         await db.execute("DELETE FROM meetings WHERE id = ?", (meeting_id,))
+        await db.commit()
+        return {"ok": True}
+    finally:
+        await db.close()
+
+
+@app.get("/api/meetings/{meeting_id}/transcript-edits", dependencies=[Depends(verify_token)])
+async def get_transcript_edits(meeting_id: int):
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT line_index, original_text, edited_text, edited_at "
+            "FROM transcript_edits WHERE meeting_id = ? ORDER BY line_index",
+            (meeting_id,),
+        )
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        await db.close()
+
+
+@app.put("/api/meetings/{meeting_id}/transcript-edits/{line_index}", dependencies=[Depends(verify_token)])
+async def save_transcript_edit(
+    meeting_id: int,
+    line_index: int,
+    original_text: str = Form(),
+    edited_text: str = Form(),
+):
+    db = await get_db()
+    try:
+        cursor = await db.execute(
+            "SELECT id FROM meetings WHERE id = ?", (meeting_id,)
+        )
+        if not await cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Meeting not found")
+        await db.execute(
+            "INSERT OR REPLACE INTO transcript_edits (meeting_id, line_index, original_text, edited_text) "
+            "VALUES (?, ?, ?, ?)",
+            (meeting_id, line_index, original_text, edited_text),
+        )
+        await db.commit()
+        return {"ok": True}
+    finally:
+        await db.close()
+
+
+@app.delete("/api/meetings/{meeting_id}/transcript-edits/{line_index}", dependencies=[Depends(verify_token)])
+async def delete_transcript_edit(meeting_id: int, line_index: int):
+    db = await get_db()
+    try:
+        await db.execute(
+            "DELETE FROM transcript_edits WHERE meeting_id = ? AND line_index = ?",
+            (meeting_id, line_index),
+        )
         await db.commit()
         return {"ok": True}
     finally:

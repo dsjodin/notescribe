@@ -353,6 +353,13 @@ h1 {
   margin-bottom: 0;
 }
 
+.viewer-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
 .transcript-container {
   display: flex;
   flex-direction: column;
@@ -399,6 +406,100 @@ h1 {
   font-size: 0.95rem;
   line-height: 1.5;
   flex: 1;
+}
+
+/* Transcript editing */
+.transcript-line-edited {
+  background: rgba(108, 99, 255, 0.04);
+}
+
+.transcript-edit-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.transcript-line:hover .transcript-edit-btn {
+  opacity: 1;
+}
+
+.transcript-edit-btn:hover {
+  color: var(--primary);
+}
+
+.transcript-edited-badge {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.transcript-edited-badge:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.transcript-edit-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.transcript-edit-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.transcript-edit-input:focus {
+  border-color: var(--primary);
+}
+
+/* Diff view */
+.transcript-diff {
+  margin-left: calc(0.75rem + 24px + 0.75rem + 50px + 0.75rem + 100px + 0.75rem);
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border-radius: 6px;
+  border-left: 3px solid var(--primary);
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.transcript-diff-original {
+  color: #f87171;
+  text-decoration: line-through;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.transcript-diff-edited {
+  color: #4ade80;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.transcript-diff-label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-right: 0.4rem;
 }
 
 /* Speaker filter bar */

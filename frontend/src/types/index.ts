@@ -19,3 +19,10 @@ export interface TranscriptLine {
   speaker: string;
   text: string;
 }
+
+export interface TranscriptEdit {
+  line_index: number;
+  original_text: string;
+  edited_text: string;
+  edited_at: string;
+}
